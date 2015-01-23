@@ -344,7 +344,7 @@ endif
 
 ## user/userdebug ##
 
-user_variant := $(filter user userdebug,$(TARGET_BUILD_VARIANT))
+user_variant := $(filter eng user userdebug,$(TARGET_BUILD_VARIANT))
 enable_target_debugging := true
 tags_to_install :=
 ifneq (,$(user_variant))
@@ -391,7 +391,8 @@ endif # !enable_target_debugging
 ## eng ##
 
 ifeq ($(TARGET_BUILD_VARIANT),eng)
-tags_to_install := debug eng
+tags_to_install :=
+WITH_DEXPREOPT := false
 ifneq ($(filter ro.setupwizard.mode=ENABLED, $(call collapse-pairs, $(ADDITIONAL_BUILD_PROPERTIES))),)
   # Don't require the setup wizard on eng builds
   ADDITIONAL_BUILD_PROPERTIES := $(filter-out ro.setupwizard.mode=%,\
@@ -418,7 +419,7 @@ endif
 
 # TODO: this should be eng I think.  Since the sdk is built from the eng
 # variant.
-tags_to_install := debug eng
+tags_to_install := eng
 ADDITIONAL_BUILD_PROPERTIES += xmpp.auto-presence=true
 ADDITIONAL_BUILD_PROPERTIES += ro.config.nocheckin=yes
 else # !sdk
@@ -1041,14 +1042,15 @@ target-java-tests : java-target-tests
 target-native-tests : native-target-tests
 tests : host-tests target-tests
 
-# To catch more build breakage, check build tests modules in eng and userdebug builds.
+# To catch more build breakage, check build tests modules in userdebug builds.
 ifneq ($(ANDROID_NO_TEST_CHECK),true)
 ifneq ($(TARGET_BUILD_PDK),true)
-ifneq ($(filter eng userdebug,$(TARGET_BUILD_VARIANT)),)
+ifneq ($(filter userdebug,$(TARGET_BUILD_VARIANT)),)
 droidcore : target-tests host-tests
 endif
 endif
 endif
+.PHONY: lintall
 
 ifneq (,$(filter samplecode, $(MAKECMDGOALS)))
 .PHONY: samplecode
