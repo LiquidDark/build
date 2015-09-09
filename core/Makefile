@@ -1100,15 +1100,21 @@ INTERNAL_SYSTEMIMAGE_FILES := $(filter $(TARGET_OUT)/%, \
     $(PDK_FUSION_SYSIMG_FILES) \
     $(RECOVERY_RESOURCE_ZIP))
 
+systemimage-changelog: $(INTERNAL_SYSTEMIMAGE_FILES)
+	@echo ${CL_YLW}"Generating Changelog Right Now!"${CL_RST}
+	$(hide) APKCERTS=$(APKCERTS_FILE) ./vendor/nougat/tools/changelog
+
+.PHONY: systemimage-changelog
+
 systemimage-squisher: $(INTERNAL_SYSTEMIMAGE_FILES)
 	@echo ${CL_YLW}"Optimizing PNGs to Shrink ROM Size!"${CL_RST}
 	$(hide) APKCERTS=$(APKCERTS_FILE) $(SQUISHER_SCRIPT) $@
 
 ifeq ($(NO_SQUISHER),)
 .PHONY: systemimage-squisher
-FULL_SYSTEMIMAGE_DEPS := $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS) systemimage-squisher
+FULL_SYSTEMIMAGE_DEPS := $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS) systemimage-changelog systemimage-squisher
 else
-FULL_SYSTEMIMAGE_DEPS := $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS)
+FULL_SYSTEMIMAGE_DEPS := $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS) systemimage-changelog
 endif
 
 # -----------------------------------------------------------------
