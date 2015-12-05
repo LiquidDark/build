@@ -146,6 +146,11 @@ class EdifyGenerator(object):
            ");")
     self.script.append(self.WordWrap(cmd))
 
+  def FlashViPER(self):
+    self.script.append('package_extract_dir("viper", "/tmp/viper");')
+    self.script.append('run_program("/sbin/busybox", "unzip", "/tmp/viper/viper.zip", "META-INF/com/google/android/*", "-d", "/tmp/viper");')
+    self.script.append('run_program("/sbin/busybox", "sh", "/tmp/viper/META-INF/com/google/android/update-binary", "dummy", "1", "/tmp/viper/viper.zip");')
+
   def FlashSuperSU(self):
     self.script.append('package_extract_dir("supersu", "/tmp/supersu");')
     self.script.append('run_program("/sbin/busybox", "unzip", "/tmp/supersu/supersu.zip", "META-INF/com/google/android/*", "-d", "/tmp/supersu");')
