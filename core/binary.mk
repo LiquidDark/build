@@ -212,11 +212,11 @@ endif
 # clang is enabled by default for host builds
 # enable it unless we've specifically disabled clang above
 ifdef LOCAL_IS_HOST_MODULE
-    ifneq ($($(my_prefix)OS),windows)
+  ifneq ($($(my_prefix)OS),windows)
     ifeq ($(my_clang),)
         my_clang := true
     endif
-    endif
+  endif
 # Add option to make gcc the default for device build
 else ifeq ($(USE_CLANG_PLATFORM_BUILD),false)
     ifeq ($(my_clang),)
@@ -261,8 +261,8 @@ include $(BUILD_SYSTEM)/cxx_stl_setup.mk
 ifdef LOCAL_HAL_STATIC_LIBRARIES
 $(foreach lib, $(LOCAL_HAL_STATIC_LIBRARIES), \
     $(eval b_lib := $(filter $(lib).%,$(BOARD_HAL_STATIC_LIBRARIES)))\
-    $(if $(b_lib), $(eval my_static_libraries += $(b_lib)),\
-                   $(eval my_static_libraries += $(lib).default)))
+    $(if $(b_lib), $(eval my_static_libraries := $(b_lib) $(my_static_libraries)),\
+                   $(eval my_static_libraries := $(lib).default $(my_static_libraries))))
 b_lib :=
 endif
 
