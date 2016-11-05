@@ -1102,7 +1102,7 @@ INTERNAL_SYSTEMIMAGE_FILES := $(filter $(TARGET_OUT)/%, \
 
 systemimage-changelog: $(INTERNAL_SYSTEMIMAGE_FILES)
 	@echo ${CL_YLW}"Generating Changelog Right Now!"${CL_RST}
-	$(hide) APKCERTS=$(APKCERTS_FILE) ./vendor/nougat/tools/changelog
+	$(hide) APKCERTS=$(APKCERTS_FILE) ./vendor/liquid/tools/changelog
 
 .PHONY: systemimage-changelog
 
