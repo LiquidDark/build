@@ -33,7 +33,10 @@ STRICT_CLANG_LEVEL := \
 ############
 # GRAPHITE #
 ############
-LOCAL_DISABLE_GRAPHITE :=
+
+LOCAL_DISABLE_GRAPHITE := \
+	libfec_rs \
+	libfec_rs_host
 
 GRAPHITE_FLAGS := \
 	-fgraphite \
@@ -50,75 +53,47 @@ GRAPHITE_FLAGS := \
 #########
 
 # Polly flags for use with Clang
-POLLY :=-mllvm -polly \
-	-mllvm -polly-parallel \
-	-mllvm -polly-ast-use-context \
-	-mllvm -polly-vectorizer=polly \
-	-mllvm -polly-opt-fusion=max \
-	-mllvm -polly-opt-maximize-bands=yes \
-	-mllvm -polly-run-dce \
-	-mllvm -polly-dependences-computeout=0 \
-	-mllvm -polly-dependences-analysis-type=value-based \
-	-mllvm -polly-run-inliner \
-	-mllvm -polly-detect-keep-going \
-	-mllvm -polly-rtc-max-arrays-per-group=40
+POLLY := -mllvm -polly \
+	 -mllvm -polly-parallel -lgomp \
+	 -mllvm -polly-run-inliner \
+	 -mllvm -polly-opt-fusion=max \
+	 -mllvm -polly-ast-use-context \
+	 -mllvm -polly-opt-maximize-bands=yes \
+	 -mllvm -polly-run-dce \
+	 -mllvm -polly-opt-simplify-deps=no \
+	 -mllvm -polly-position=after-loopopt
 
 # Those are mostly Bluetooth modules
 DISABLE_POLLY_O3 := \
 	audio.a2dp.default \
 	bdAddrLoader \
 	bdt \
-    bdtest \
+	bdtest \
 	bluetooth.mapsapi \
-    bluetooth.default \
-    bluetooth.mapsapi \
-	libart \
-    libart-compiler \
-    libbluetooth_jni \
-    libbt% \
-    libosi \
-    ositests \
+	bluetooth.default \
+	bluetooth.mapsapi \
+	libbluetooth_jni \
+	libbt% \
+	libosi \
+	ositests \
 	net_bdtool \
-    net_hci \
+	net_hci \
 	net_test_btcore \
 	net_test_device \
-    net_test_osi \
-    libxml2
+	net_test_osi
 
 # Disable modules that dont work with Polly. Split up by arch.
 DISABLE_POLLY_arm := \
-	healthd \
-	libaudioflinger \
-	libavcdec \
-    libavcenc \
-	libbnnmlowp \
+	libandroid \
 	libcrypto \
-	libcrypto_static \
-	libF77blas \
-	libFFTEm \
+    libcrypto_static \
 	libFraunhoferAAC \
-	libicuuc \
-	libinputflinger \
-	libjni_filtershow_filters \
-	libjni_snapcammosaic \
 	libjpeg_static \
 	libLLVM% \
-	libmpeg2dec \
-	libmusicbundle \
 	libopus \
 	libpdfium% \
-	libreverb \
-	libRS_internal \
-	libsonic \
 	libskia_static \
-	libstagefright% \
-	libv8 \
-	libvpx \
-	libwebp-decode \
-    libwebp-encode \
-	libwebrtc% \
-	libyuv_static \
-	recovery
+	libstagefright%
 
 DISABLE_POLLY_arm64 := \
 	$(DISABLE_POLLY_arm) \
@@ -133,34 +108,40 @@ LOCAL_DISABLE_POLLY := \
   $(DISABLE_POLLY_$(TARGET_ARCH)) \
   $(DISABLE_POLLY_O3)
 
-# Set POLLY based on DISABLE_POLLY
-ifeq (1,$(words $(filter $(LOCAL_DISABLE_POLLY),$(LOCAL_MODULE))))
-  POLLY :=
+# We just don't want these flags
+my_cflags := $(filter-out -Wall -Werror -g -Wextra -Weverything,$(my_cflags))
+
+ifneq (1,$(words $(filter $(DISABLE_POLLY_O3),$(LOCAL_MODULE))))
+  # Remove all other "O" flags to set O3
+  my_cflags := $(filter-out -O3 -O2 -Os -O1 -O0 -Og -Oz,$(my_cflags))
+  my_cflags += -O3
+else
+  my_cflags += -O2
 endif
 
 ifeq ($(my_sdclang), true)
-  ifeq ($(my_clang),true)
-    my_cflags += -Qunused-arguments
-  else
-    my_cflags += -Wno-unknown-warning
-  endif
-else ifeq ($(my_clang),true)
+  # Do not enable POLLY on libraries
   ifndef LOCAL_IS_HOST_MODULE
-    my_cflags := $(filter-out -g,$(my_cflags))
-    # Enable Polly if not blacklisted.
-    # Don't show unused warning on Clang and GCC
-    my_cflags += $(POLLY) -Qunused-arguments
+    # Enable POLLY if not blacklisted
+    ifneq (1,$(words $(filter $(LOCAL_DISABLE_POLLY),$(LOCAL_MODULE))))
+      # Enable POLLY only on clang
+      ifneq ($(LOCAL_CLANG),false)
+        my_cflags += $(POLLY)
+        my_cflags += -Qunused-arguments
+      endif
+    endif
   endif
-else
+endif
+
+ifeq ($(LOCAL_CLANG),false)
   my_cflags += -Wno-unknown-warning
 endif
 
 ifeq ($(STRICT_ALIASING),true)
+  # Remove the no-strict-aliasing flags
   my_cflags := $(filter-out -fno-strict-aliasing,$(my_cflags))
   ifneq (1,$(words $(filter $(LOCAL_DISABLE_STRICT),$(LOCAL_MODULE))))
-    ifeq ($(my_clang),true)
-      my_cflags += $(STRICT_ALIASING_FLAGS) $(STRICT_GLANG_LEVEL)
-    else ifeq ($(my_sdclang),true)
+    ifneq ($(LOCAL_CLANG),false)
       my_cflags += $(STRICT_ALIASING_FLAGS) $(STRICT_GLANG_LEVEL)
     else
       my_cflags += $(STRICT_ALIASING_FLAGS) $(STRICT_GCC_LEVEL)
@@ -169,23 +150,8 @@ ifeq ($(STRICT_ALIASING),true)
 endif
 
 ifeq ($(GRAPHITE_OPTS),true)
-  ifneq (1,$(words $(filter $(LOCAL_DISABLE_GRAPHITE),$(LOCAL_MODULE))))
-    ifneq ($(my_clang),true)
-      ifneq ($(my_sdclang),true)
-        my_cflags += $(GRAPHITE_FLAGS)
-      endif
-    endif
+  # Enable graphite only on GCC
+  ifneq ($(LOCAL_CLANG),false)
+    my_cflags += $(GRAPHITE_FLAGS)
   endif
-endif
-
-ifeq ($(O3_OPTS),true)
-  my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
-  ifeq (1,$(words $(filter $(DISABLE_POLLY_O3),$(LOCAL_MODULE))))
-      my_cflags += -O2
-  else
-      my_cflags += -O3
-  endif
-else
-  my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
-  my_cflags += -O2
 endif
