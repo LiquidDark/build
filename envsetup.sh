@@ -1577,7 +1577,7 @@ function mk_timer()
     fi
     echo
     if [ $ret -eq 0 ] ; then
-        echo -n "${color_success}#### make completed successfully "
+        echo -n "${color_success}#### LiquidDark completed successfully "
     else
         echo -n "${color_failed}#### make failed to build some targets "
     fi
