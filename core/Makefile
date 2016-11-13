@@ -1101,7 +1101,7 @@ INTERNAL_SYSTEMIMAGE_FILES := $(filter $(TARGET_OUT)/%, \
     $(RECOVERY_RESOURCE_ZIP))
 
 systemimage-changelog: $(INTERNAL_SYSTEMIMAGE_FILES)
-	@echo ${CL_YLW}"Generating Changelog Right Now!"${CL_RST}
+	@echo ${CL_YLW}"Generating ROM Changelog Right NOW!"${CL_RST}
 	$(hide) APKCERTS=$(APKCERTS_FILE) ./vendor/nougat/tools/changelog
 
 .PHONY: systemimage-changelog
@@ -1765,7 +1765,7 @@ $(BUILT_TARGET_FILES_PACKAGE): \
 		$(APKCERTS_FILE) \
 		$(HOST_OUT_EXECUTABLES)/fs_config \
 		| $(ACP)
-	@echo -e ${CL_YLW}"Package target files:"${CL_RST}" $@"
+	@echo ${CL_YLW}"Package target files:"${CL_RST}" $@"
 	$(hide) rm -rf $@ $(zip_root)
 	$(hide) mkdir -p $(dir $@) $(zip_root)
 ifneq (,$(INSTALLED_RECOVERYIMAGE_TARGET)$(filter true,$(BOARD_USES_RECOVERY_AS_BOOT)))
