@@ -715,10 +715,10 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.ShowProgress(0.05, 5)
   script.WriteRawImage("/boot", "boot.img")
   
-  script.Print("Flashing ViPERAtmos...")
-  common.ZipWriteStr(output_zip, "viperatmos/viperatmos.zip",
-                 ""+input_zip.read("SYSTEM/addon.d/UPDATE-ViPERAtmos.zip"))
-  script.FlashViPERAtmos()
+  script.Print("Flashing Viper...")
+  common.ZipWriteStr(output_zip, "v4a/v4a.zip",
+                 ""+input_zip.read("SYSTEM/addon.d/v4a.zip"))
+  script.FlashV4A()
   
   script.Print("Flashing SuperSU...")
   common.ZipWriteStr(output_zip, "supersu/supersu.zip",

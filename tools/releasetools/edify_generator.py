@@ -151,10 +151,10 @@ class EdifyGenerator(object):
     self.script.append('run_program("/sbin/busybox", "unzip", "/tmp/supersu/supersu.zip", "META-INF/com/google/android/*", "-d", "/tmp/supersu");')
     self.script.append('run_program("/sbin/busybox", "sh", "/tmp/supersu/META-INF/com/google/android/update-binary", "dummy", "1", "/tmp/supersu/supersu.zip");')
 
-  def FlashViPERAtmos(self):
-    self.script.append('package_extract_dir("viperatmos", "/tmp/viperatmos");')
-    self.script.append('run_program("/sbin/busybox", "unzip", "/tmp/viperatmos/viperatmos.zip", "META-INF/com/google/android/*", "-d", "/tmp/viperatmos");')
-    self.script.append('run_program("/sbin/busybox", "sh", "/tmp/viperatmos/META-INF/com/google/android/update-binary", "dummy", "1", "/tmp/viperatmos/viperatmos.zip");')
+  def FlashV4A(self):
+    self.script.append('package_extract_dir("v4a", "/tmp/v4a");')
+    self.script.append('run_program("/sbin/busybox", "unzip", "/tmp/v4a/v4a.zip", "META-INF/com/google/android/*", "-d", "/tmp/v4a");')
+    self.script.append('run_program("/sbin/busybox", "sh", "/tmp/v4a/META-INF/com/google/android/update-binary", "dummy", "1", "/tmp/v4a/v4a.zip");')
 
   def ShowProgress(self, frac, dur):
     """Update the progress bar, advancing it over 'frac' over the next
