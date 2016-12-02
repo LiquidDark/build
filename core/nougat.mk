@@ -34,9 +34,7 @@ STRICT_CLANG_LEVEL := \
 # GRAPHITE #
 ############
 
-LOCAL_DISABLE_GRAPHITE := \
-	libfec_rs \
-	libfec_rs_host
+LOCAL_DISABLE_GRAPHITE :=
 
 GRAPHITE_FLAGS := \
 	-fgraphite \
@@ -54,14 +52,17 @@ GRAPHITE_FLAGS := \
 
 # Polly flags for use with Clang
 POLLY := -mllvm -polly \
-	 -mllvm -polly-parallel -lgomp \
-	 -mllvm -polly-run-inliner \
-	 -mllvm -polly-opt-fusion=max \
-	 -mllvm -polly-ast-use-context \
-	 -mllvm -polly-opt-maximize-bands=yes \
-	 -mllvm -polly-run-dce \
-	 -mllvm -polly-opt-simplify-deps=no \
-	 -mllvm -polly-position=after-loopopt
+	-mllvm -polly-parallel -lgomp \
+	-mllvm -polly-ast-use-context \
+	-mllvm -polly-vectorizer=stripmine \
+	-mllvm -polly-opt-fusion=max \
+	-mllvm -polly-opt-maximize-bands=yes \
+	-mllvm -polly-run-dce \
+	-mllvm -polly-position=after-loopopt \
+	-mllvm -polly-run-inliner \
+	-mllvm -polly-detect-keep-going \
+	-mllvm -polly-opt-simplify-deps=no \
+	-mllvm -polly-rtc-max-arrays-per-group=40
 
 # Those are mostly Bluetooth modules
 DISABLE_POLLY_O3 := \
@@ -83,23 +84,42 @@ DISABLE_POLLY_O3 := \
 	net_test_osi
 
 # Disable modules that dont work with Polly. Split up by arch.
-DISABLE_POLLY_arm := \
-	libandroid \
+DISABLE_POLLY_arm :=  \
+	libavcdec \
+	libavcenc \
 	libcrypto \
-    libcrypto_static \
+        libcrypto_static \
+	libcryptfslollipop \
+	libdng_sdk \
+	libF77blas \
+	libFFTEm \
 	libFraunhoferAAC \
+	libjni_filtershow \
+	libjni_filtershow_filters \
 	libjpeg_static \
-	libLLVM% \
+	libLLVMCodeGen \
+	libLLVMSupport \
+	libmedia_jni \
+	libmpeg2dec \
+	libbnnmlowp \
 	libopus \
-	libpdfium% \
+	libpdfiumfxge \
+	libpdfiumjpeg \
+	librsjni \
+	libRSCpuRef \
+	libscrypttwrp_static \
 	libskia_static \
-	libstagefright%
+	libsonic \
+	libstagefright% \
+	libvpx \
+	libwebp-decode \
+	libwebp-encode \
+	libwebrtc% \
+	libyuv_static
 
 DISABLE_POLLY_arm64 := \
 	$(DISABLE_POLLY_arm) \
 	libaudioutils \
-	libmedia_jni \
-	libRSCpuRef \
 	libscrypt_static \
 	libsvoxpico
 
@@ -109,25 +129,25 @@ LOCAL_DISABLE_POLLY := \
   $(DISABLE_POLLY_O3)
 
 # We just don't want these flags
-my_cflags := $(filter-out -Wall -Werror -g -Wextra -Weverything,$(my_cflags))
+my_cflags := $(filter-out -O3 -O2 -Os -O1 -O0 -Og -Oz -Wall -Werror -g -Wextra -Weverything,$(my_cflags))
+my_cppflags := $(filter-out -O3 -O2 -Os -O1 -O0 -Og -Oz -Wall -Werror -g -Wextra -Weverything,$(my_cppflags))
+my_conlyflags := $(filter-out -O3 -O2 -Os -O1 -O0 -Og -Oz -Wall -Werror -g -Wextra -Weverything,$(my_conlyflags))
 
 ifneq (1,$(words $(filter $(DISABLE_POLLY_O3),$(LOCAL_MODULE))))
-  # Remove all other "O" flags to set O3
-  my_cflags := $(filter-out -O3 -O2 -Os -O1 -O0 -Og -Oz,$(my_cflags))
   my_cflags += -O3
 else
   my_cflags += -O2
 endif
 
-ifeq ($(my_sdclang), true)
+ifeq ($(my_clang), true)
   # Do not enable POLLY on libraries
   ifndef LOCAL_IS_HOST_MODULE
     # Enable POLLY if not blacklisted
     ifneq (1,$(words $(filter $(LOCAL_DISABLE_POLLY),$(LOCAL_MODULE))))
       # Enable POLLY only on clang
       ifneq ($(LOCAL_CLANG),false)
-        my_cflags += $(POLLY)
-        my_cflags += -Qunused-arguments
+        my_cflags += $(POLLY) -Qunused-arguments -fuse-ld=gold
+        my_ldflags += -fuse-ld=gold
       endif
     endif
   endif
